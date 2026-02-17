@@ -10,19 +10,31 @@ export const Route = createFileRoute("/")({
   component: CalendarPage,
 });
 
+interface CurrentDate {
+  year: string;
+  month: string;
+  startDate: string;
+  endDate: string;
+}
+
 function CalendarPage() {
   const [shifts, setShifts] = useState<Shift[]>([]);
   const [loggedIn, setLoggedIn] = useState<boolean>(false);
   const [loginDialogOpen, setLoginDialogOpen] = useState<boolean>(false);
+  const [currentDate, setCurrentDate] = useState<CurrentDate | null>(null);
 
   const fetchData = useCallback(async () => {
+    if (!currentDate) return;
     try {
-      const shifts = await getShifts();
+      const shifts = await getShifts(
+        currentDate?.startDate,
+        currentDate?.endDate,
+      );
       setShifts(shifts);
     } catch (error) {
       console.error("Error fetching shifts:", error);
     }
-  }, []);
+  }, [currentDate]);
 
   useEffect(() => {
     fetchData();
@@ -84,6 +96,7 @@ function CalendarPage() {
           data={shifts}
           handleEditShift={handleEditShift}
           isLoggedIn={loggedIn}
+          setCurrentDate={setCurrentDate}
         />
       </div>
 

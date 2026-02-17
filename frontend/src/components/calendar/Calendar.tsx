@@ -12,6 +12,17 @@ interface Props {
   data: Shift[];
   handleEditShift: (title: string, date: string) => void;
   isLoggedIn: boolean;
+  setCurrentDate: ({
+    year,
+    month,
+    startDate,
+    endDate,
+  }: {
+    year: string;
+    month: string;
+    startDate: string;
+    endDate: string;
+  }) => void;
 }
 
 interface Event {
@@ -20,7 +31,12 @@ interface Event {
   changed_work_type: string | null;
 }
 
-export default function Calendar({ data, handleEditShift, isLoggedIn }: Props) {
+export default function Calendar({
+  data,
+  handleEditShift,
+  isLoggedIn,
+  setCurrentDate,
+}: Props) {
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [selected, setSelected] = useState<string>("");
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
@@ -52,6 +68,22 @@ export default function Calendar({ data, handleEditShift, isLoggedIn }: Props) {
         contentHeight="auto"
         locale={KoLocal}
         fixedWeekCount={false}
+        datesSet={(info) => {
+          const year = info.view.currentStart.getFullYear();
+          const month = info.view.currentStart.getMonth();
+
+          const startDate = new Date(year, month, 2);
+          const endDate = new Date(year, month + 1, 1);
+
+          const format = (date: Date) => date.toISOString().split("T")[0];
+
+          setCurrentDate({
+            year: year.toString(),
+            month: (month + 1).toString().padStart(2, "0"),
+            startDate: format(startDate),
+            endDate: format(endDate),
+          });
+        }}
         eventClick={(eventInfo) => {
           if (!isLoggedIn) {
             alert("로그인이 필요합니다.");

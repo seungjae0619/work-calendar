@@ -8,9 +8,9 @@ export interface Shift {
   isChanged?: boolean;
 }
 
-export const getShifts = async () => {
+export const getShifts = async (startDate: string, endDate: string) => {
   const response = await apiClient.get<Shift[]>(
-    "/shifts/?start=2025-08-11&end=2027-04-21",
+    `/shifts/?start=${startDate}&end=${endDate}`,
   );
   return response.data;
 };

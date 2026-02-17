@@ -50,7 +50,6 @@ work-calendar/
 │   └── Procfile                # 배포 설정
 ├── docker-compose.yml          # Docker 컨테이너 설정
 ├── .gitignore                  # Git 무시 파일
-├── DEPLOYMENT.md               # 배포 가이드
 └── README.md                   # 이 파일
 ```
 
