@@ -1,0 +1,77 @@
+# OS 파일
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE 설정
+.vscode/
+.idea/
+*.iml
+*.sublime-project
+*.sublime-workspace
+
+# Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+frontend/.env.*.local
+
+# Backend
+backend/__pycache__/
+backend/.venv/
+backend/venv/
+backend/.env
+backend/.env.local
+backend/*.pyc
+backend/.pytest_cache/
+backend/.coverage
+backend/htmlcov/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+*.log
+logs/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Build outputs
+build/
+dist/
+.next/
+out/
+
+# Temporary files
+.tmp/
+temp/
+*.bak
+
+# Dependencies (중요: node_modules, venv는 빌드 시 자동 설치)
+node_modules/
+venv/
+env/
+
+# IDE temporary files
+*.sublime-project
+*.sublime-workspace
+
+# OS temp files
+.AppleDouble
+.LSOverride
+
+# 민감한 정보 (실제 사용 시 주석 해제)
+# .env
+# .env.local
+# secrets.json
+
+CODE_REVIEW.md
+DEPLOYMENT.md
+DEPLOYMENT_CHECKLIST.md
+LOGIN_IMPLEMENTATION.md
