@@ -14,7 +14,7 @@ load_dotenv()
 
 app = FastAPI()
 
-ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD", "admin123")
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
 SHIFT_PATTERN = ["주"] * 7 + ["야", "휴"] * 14
 
 # 환경 변수
@@ -30,7 +30,7 @@ origins = [
     "http://127.0.0.1:5173",
 ]
 
-if FRONTEND_URL and FRONTEND_URL != "http://localhost:5173":
+if FRONTEND_URL:
     origins.append(FRONTEND_URL)
 
 app.add_middleware(
