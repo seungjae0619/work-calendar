@@ -174,3 +174,7 @@ def update_shift(date: str, work_type: str, session: Session = Depends(get_sessi
     session.commit()
     session.refresh(existing_shift)
     return existing_shift
+
+@app.get("/healthcheck")
+async def health_check():
+    return {"status": "staying alive!"}
