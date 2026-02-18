@@ -153,7 +153,7 @@ def generate_auto_shifts(
     session.commit()
     return {"message": f"{start_date}부터 {end_date}까지 총 {generated_count}개의 근무표 생성 완료"}
 
-@app.get(f"/shifts/", response_model=list[ShiftRead], summary="근무표 조회")
+@app.get(f"/shifts", response_model=list[ShiftRead], summary="근무표 조회")
 def read_shifts(start: str | None = None, end: str | None = None, session: Session = Depends(get_session)):
     query = select(Shift).order_by(Shift.date)
 

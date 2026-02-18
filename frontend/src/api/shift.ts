@@ -10,7 +10,7 @@ export interface Shift {
 
 export const getShifts = async (startDate: string, endDate: string) => {
   const response = await apiClient.get<Shift[]>(
-    `/shifts/?start=${startDate}&end=${endDate}`,
+    `/shifts?start=${startDate}&end=${endDate}`,
   );
   return response.data;
 };
