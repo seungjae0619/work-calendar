@@ -6,7 +6,7 @@ load_dotenv()
 
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5433/shift_db")
 
-engine = create_engine(DATABASE_URL)
+engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_size=10, max_overflow=20)
 
 def create_db_and_tables():
     SQLModel.metadata.create_all(engine)
