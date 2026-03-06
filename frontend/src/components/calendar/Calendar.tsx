@@ -23,6 +23,7 @@ interface Props {
     startDate: string;
     endDate: string;
   }) => void;
+  isLoading: boolean;
 }
 
 interface Event {
@@ -36,6 +37,7 @@ export default function Calendar({
   handleEditShift,
   isLoggedIn,
   setCurrentDate,
+  isLoading,
 }: Props) {
   const [dialogOpen, setDialogOpen] = useState<boolean>(false);
   const [selected, setSelected] = useState<string>("");
@@ -60,6 +62,11 @@ export default function Calendar({
 
   return (
     <div className="w-full h-full md:h-[480px] md:w-[800px] md:mx-auto flex flex-col">
+      {isLoading && (
+        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 rounded-lg">
+          <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+        </div>
+      )}
       <FullCalendar
         plugins={[dayGridPlugin, interactionPlugin]}
         initialView="dayGridMonth"
@@ -166,6 +173,7 @@ export default function Calendar({
               </button>
             ))}
           </div>
+
           <div className="flex justify-end">
             <Button
               className="w-12.5 bg-gray-900"

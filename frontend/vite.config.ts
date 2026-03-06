@@ -19,7 +19,6 @@ export default defineConfig({
 
   resolve: {
     alias: {
-      // 이 부분이 핵심입니다: "@"를 "./src" 폴더로 매핑
       "@": path.resolve(__dirname, "./src"),
     },
   },
