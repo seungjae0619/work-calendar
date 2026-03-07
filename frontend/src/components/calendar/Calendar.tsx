@@ -55,16 +55,22 @@ export default function Calendar({
   const calendarRef = useRef<FullCalendar>(null);
   const touchStartX = useRef<number>(0);
 
-  const calendarEvents = data.map((item) => ({
-    title: item.changed_work_type || item.work_type,
-    start: item.date,
-    extendedProps: {
-      isChanged:
-        item.changed_work_type && item.changed_work_type !== item.work_type,
-      originalType: item.work_type,
-      changedType: item.changed_work_type,
-    },
-  }));
+  const calendarEvents = data
+    .filter((item) => {
+      const itemMonth = item.date.slice(0, 7);
+      const currentMonth = `${displayYear}-${String(displayMonth).padStart(2, "0")}`;
+      return itemMonth === currentMonth;
+    })
+    .map((item) => ({
+      title: item.changed_work_type || item.work_type,
+      start: item.date,
+      extendedProps: {
+        isChanged:
+          item.changed_work_type && item.changed_work_type !== item.work_type,
+        originalType: item.work_type,
+        changedType: item.changed_work_type,
+      },
+    }));
 
   const navigateMonth = (direction: "left" | "right") => {
     if (isAnimating) return;
