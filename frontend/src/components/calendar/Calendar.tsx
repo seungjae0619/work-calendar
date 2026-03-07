@@ -4,14 +4,16 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { Shift } from "../../api/shift";
 import KoLocal from "@fullcalendar/core/locales/ko";
 import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader } from "../ui/dialog";
-import { DialogTitle } from "@radix-ui/react-dialog";
-import { Button } from "../ui/button";
+import { isHoliday } from "@hyunbinseo/holidays-kr";
+import CalendarStyles from "./CalendarStyles";
+import CalendarDialog from "./CalendarDialog";
+import { getWorkTypeStyle } from "./constants";
 
 interface Props {
   data: Shift[];
   handleEditShift: (title: string, date: string) => void;
   isLoggedIn: boolean;
+  isLoading: boolean;
   setCurrentDate: ({
     year,
     month,
@@ -23,7 +25,6 @@ interface Props {
     startDate: string;
     endDate: string;
   }) => void;
-  isLoading: boolean;
 }
 
 interface Event {
@@ -36,11 +37,11 @@ export default function Calendar({
   data,
   handleEditShift,
   isLoggedIn,
-  setCurrentDate,
   isLoading,
+  setCurrentDate,
 }: Props) {
-  const [dialogOpen, setDialogOpen] = useState<boolean>(false);
-  const [selected, setSelected] = useState<string>("");
+  const [dialogOpen, setDialogOpen] = useState(false);
+  const [selected, setSelected] = useState("");
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
 
   const calendarEvents = data.map((item) => ({
@@ -54,147 +55,88 @@ export default function Calendar({
     },
   }));
 
-  const WORK_TYPES = [
-    { id: "주", color: "#ffd600", textColor: "#3c3c3c" },
-    { id: "야", color: "#424242", textColor: "#ffffff" },
-    { id: "휴", color: "#ffffff", textColor: "#f05a6e" },
-  ] as const;
-
   return (
-    <div className="w-full h-full md:h-[480px] md:w-[800px] md:mx-auto flex flex-col">
-      {isLoading && (
-        <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 rounded-lg">
-          <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
-        </div>
-      )}
-      <FullCalendar
-        plugins={[dayGridPlugin, interactionPlugin]}
-        initialView="dayGridMonth"
-        events={calendarEvents}
-        height="100%"
-        contentHeight="auto"
-        locale={KoLocal}
-        fixedWeekCount={false}
-        datesSet={(info) => {
-          const year = info.view.currentStart.getFullYear();
-          const month = info.view.currentStart.getMonth();
+    <>
+      <CalendarStyles />
+      <div className="w-full h-full md:h-[480px] md:w-[800px] md:mx-auto flex flex-col relative">
+        {isLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 rounded-lg">
+            <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
+          </div>
+        )}
+        <FullCalendar
+          plugins={[dayGridPlugin, interactionPlugin]}
+          initialView="dayGridMonth"
+          events={calendarEvents}
+          height="100%"
+          contentHeight="auto"
+          locale={KoLocal}
+          fixedWeekCount={false}
+          datesSet={(info) => {
+            const year = info.view.currentStart.getFullYear();
+            const month = info.view.currentStart.getMonth();
+            const startDate = new Date(year, month, 2);
+            const endDate = new Date(year, month + 1, 1);
+            const format = (date: Date) => date.toISOString().split("T")[0];
+            setCurrentDate({
+              year: year.toString(),
+              month: (month + 1).toString().padStart(2, "0"),
+              startDate: format(startDate),
+              endDate: format(endDate),
+            });
+          }}
+          dayCellClassNames={(arg) => {
+            const year = arg.date.getFullYear();
+            const month = String(arg.date.getMonth() + 1).padStart(2, "0");
+            const day = String(arg.date.getDate()).padStart(2, "0");
+            const kstDate = new Date(`${year}-${month}-${day}T00:00:00+09:00`);
+            return isHoliday(kstDate) ? ["fc-day-holiday"] : [];
+          }}
+          eventClick={(eventInfo) => {
+            if (!isLoggedIn) {
+              alert("로그인이 필요합니다.");
+              return;
+            }
+            const shiftData = data.find(
+              (s) => s.date === eventInfo.event.startStr,
+            );
+            setDialogOpen(true);
+            setSelectedEvent({
+              work_type: shiftData?.work_type || "",
+              date: eventInfo.event.startStr,
+              changed_work_type: shiftData?.changed_work_type || null,
+            });
+            setSelected(shiftData?.changed_work_type || "");
+          }}
+          eventContent={(eventInfo) => {
+            const title = eventInfo.event.title;
+            const isChanged = eventInfo.event.extendedProps.isChanged;
+            const { color, textColor } = getWorkTypeStyle(title);
 
-          const startDate = new Date(year, month, 2);
-          const endDate = new Date(year, month + 1, 1);
-
-          const format = (date: Date) => date.toISOString().split("T")[0];
-
-          setCurrentDate({
-            year: year.toString(),
-            month: (month + 1).toString().padStart(2, "0"),
-            startDate: format(startDate),
-            endDate: format(endDate),
-          });
-        }}
-        eventClick={(eventInfo) => {
-          if (!isLoggedIn) {
-            alert("로그인이 필요합니다.");
-            return;
-          }
-          const shiftData = data.find(
-            (s) => s.date === eventInfo.event.startStr,
-          );
-          setDialogOpen(true);
-          setSelectedEvent({
-            work_type: shiftData?.work_type || "",
-            date: eventInfo.event.startStr,
-            changed_work_type: shiftData?.changed_work_type || null,
-          });
-          setSelected(shiftData?.changed_work_type || "");
-        }}
-        eventContent={(eventInfo) => {
-          const title = eventInfo.event.title;
-          const isChanged = eventInfo.event.extendedProps.isChanged;
-
-          const colorClass =
-            WORK_TYPES.find((b) => b.id === title)?.color || "";
-          const textClass =
-            WORK_TYPES.find((b) => b.id === title)?.textColor || "";
-
-          return (
-            <div
-              className={`flex justify-center w-full h-full items-center flex-col hover:cursor-pointer`}
-            >
-              <div
-                className={`w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold`}
-                style={{
-                  backgroundColor: colorClass,
-                  color: textClass,
-                }}
-              >
-                {title.charAt(0)}
+            return (
+              <div className="flex justify-center w-full h-full items-center flex-col hover:cursor-pointer">
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[12px] font-bold"
+                  style={{ backgroundColor: color, color: textColor }}
+                >
+                  {title.charAt(0)}
+                </div>
+                {isChanged && (
+                  <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-0.5" />
+                )}
               </div>
-              {isChanged && (
-                <div className="w-1.5 h-1.5 rounded-full bg-red-500 mt-0.5"></div>
-              )}
-            </div>
-          );
-        }}
-      />
-      <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="bg-gray-500 border-gray-500 w-80 md:w-80 ">
-          <DialogHeader>
-            <DialogTitle>
-              <span className="text-white">{selectedEvent?.date}</span>
-              <p className="text-white text-sm">
-                본근무 : {selectedEvent?.work_type}
-              </p>
-              {selectedEvent?.changed_work_type &&
-              selectedEvent?.changed_work_type != selectedEvent.work_type ? (
-                <p className="text-red-400 text-sm flex items-center gap-1">
-                  변경됨 : {selectedEvent.changed_work_type}
-                  <span className="w-2 h-2 rounded-full bg-red-500"></span>
-                </p>
-              ) : (
-                ""
-              )}
-            </DialogTitle>
-          </DialogHeader>
-
-          <div className="flex gap-3 items-center">
-            {WORK_TYPES.map((button) => (
-              <button
-                key={button.id}
-                className={`flex items-center justify-center rounded-full w-7 h-7 hover:opacity-80 cursor-pointer ${
-                  selected == button.id ? "ring-3 ring-blue-400" : ""
-                } disabled:opacity-50 ring-offset-0 font-bold text-sm`}
-                style={{
-                  backgroundColor: button.color,
-                  color: button.textColor,
-                }}
-                onClick={() => setSelected(button.id)}
-              >
-                {button.id}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex justify-end">
-            <Button
-              className="w-12.5 bg-gray-900"
-              onClick={() => {
-                if (selected && selectedEvent?.date) {
-                  handleEditShift(selected, selectedEvent.date);
-                }
-                setSelected("");
-                setDialogOpen(false);
-              }}
-              disabled={
-                selected === "" ||
-                selected ===
-                  (selectedEvent?.changed_work_type || selectedEvent?.work_type)
-              }
-            >
-              변경
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    </div>
+            );
+          }}
+        />
+        <CalendarDialog
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          selectedEvent={selectedEvent}
+          selected={selected}
+          setSelected={setSelected}
+          handleEditShift={handleEditShift}
+        />
+      </div>
+    </>
   );
 }
