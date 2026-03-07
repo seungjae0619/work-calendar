@@ -7,6 +7,7 @@ import { useRef, useState } from "react";
 import { isHoliday } from "@hyunbinseo/holidays-kr";
 import CalendarStyles from "./CalendarStyles";
 import CalendarDialog from "./CalendarDialog";
+import CalendarDatePicker from "./CalendarDatePicker";
 import { getWorkTypeStyle } from "./constants";
 
 interface Props {
@@ -47,6 +48,10 @@ export default function Calendar({
     null,
   );
   const [isAnimating, setIsAnimating] = useState(false);
+
+  const [displayYear, setDisplayYear] = useState(new Date().getFullYear());
+  const [displayMonth, setDisplayMonth] = useState(new Date().getMonth() + 1);
+
   const calendarRef = useRef<FullCalendar>(null);
   const touchStartX = useRef<number>(0);
 
@@ -63,18 +68,20 @@ export default function Calendar({
 
   const navigateMonth = (direction: "left" | "right") => {
     if (isAnimating) return;
-
     const api = calendarRef.current?.getApi();
     setSlideDirection(direction);
     setIsAnimating(true);
-
     setTimeout(() => {
       if (direction === "left") api?.next();
       else api?.prev();
-
       setSlideDirection(null);
       setIsAnimating(false);
-    }, 250); // 애니메이션 시간과 맞춰야 함
+    }, 250);
+  };
+
+  const handleDatePickerSelect = (year: number, month: number) => {
+    const api = calendarRef.current?.getApi();
+    api?.gotoDate(new Date(year, month - 1, 1));
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -86,14 +93,15 @@ export default function Calendar({
     if (Math.abs(diff) < 50) return;
     navigateMonth(diff > 0 ? "left" : "right");
   };
+
   return (
     <>
       <CalendarStyles />
       <div
         className={`w-full h-full md:h-[480px] md:w-[800px] md:mx-auto flex flex-col relative overflow-hidden
-                    ${slideDirection === "left" ? "fc-slide-left" : ""}
-                    ${slideDirection === "right" ? "fc-slide-right" : ""}
-                  `}
+          ${slideDirection === "left" ? "fc-slide-left" : ""}
+          ${slideDirection === "right" ? "fc-slide-right" : ""}
+        `}
         onTouchStart={handleTouchStart}
         onTouchEnd={handleTouchEnd}
       >
@@ -102,6 +110,37 @@ export default function Calendar({
             <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
           </div>
         )}
+
+        <div className="flex items-center justify-between px-4 py-3">
+          <button
+            className="text-gray-400 hover:text-gray-700 text-xl px-2"
+            onClick={() => navigateMonth("right")}
+          >
+            ‹
+          </button>
+          <CalendarDatePicker
+            year={displayYear}
+            month={displayMonth}
+            onSelect={handleDatePickerSelect}
+          />
+          <div className="flex items-center gap-1">
+            <button
+              className="text-xs text-gray-500 border border-gray-200 rounded-md px-2 py-1 hover:bg-gray-100 transition-colors"
+              onClick={() => {
+                calendarRef.current?.getApi().today();
+              }}
+            >
+              오늘
+            </button>
+            <button
+              className="text-gray-400 hover:text-gray-700 text-xl px-2"
+              onClick={() => navigateMonth("left")}
+            >
+              ›
+            </button>
+          </div>
+        </div>
+
         <FullCalendar
           plugins={[dayGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
@@ -111,9 +150,14 @@ export default function Calendar({
           locale={KoLocal}
           fixedWeekCount={false}
           ref={calendarRef}
+          headerToolbar={false}
           datesSet={(info) => {
             const year = info.view.currentStart.getFullYear();
             const month = info.view.currentStart.getMonth();
+
+            setDisplayYear(year);
+            setDisplayMonth(month + 1);
+
             const startDate = new Date(year, month, 2);
             const endDate = new Date(year, month + 1, 1);
             const format = (date: Date) => date.toISOString().split("T")[0];
@@ -151,7 +195,6 @@ export default function Calendar({
             const title = eventInfo.event.title;
             const isChanged = eventInfo.event.extendedProps.isChanged;
             const { color, textColor } = getWorkTypeStyle(title);
-
             return (
               <div className="flex justify-center w-full h-full items-center flex-col hover:cursor-pointer">
                 <div
