@@ -50,6 +50,20 @@ export default function CalendarStyles() {
       .fc .fc-daygrid-event { background: transparent !important; border: none !important; }
       .fc .fc-scrollgrid { border-color: #ececec !important; }
       .fc .fc-scrollgrid-section > td { border-color: #ececec !important; }
+      .fc-slide-left {
+        animation: slideLeft 0.25s ease-in-out;
+      }
+      .fc-slide-right {
+        animation: slideRight 0.25s ease-in-out;
+      }
+      @keyframes slideLeft {
+        0%   { transform: translateX(0);     opacity: 1; }
+        100% { transform: translateX(-60px); opacity: 0; }
+      }
+      @keyframes slideRight {
+        0%   { transform: translateX(0);    opacity: 1; }
+        100% { transform: translateX(60px); opacity: 0; }
+      }
     `}</style>
   );
 }

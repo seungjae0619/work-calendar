@@ -3,7 +3,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import { Shift } from "../../api/shift";
 import KoLocal from "@fullcalendar/core/locales/ko";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { isHoliday } from "@hyunbinseo/holidays-kr";
 import CalendarStyles from "./CalendarStyles";
 import CalendarDialog from "./CalendarDialog";
@@ -43,6 +43,12 @@ export default function Calendar({
   const [dialogOpen, setDialogOpen] = useState(false);
   const [selected, setSelected] = useState("");
   const [selectedEvent, setSelectedEvent] = useState<Event | undefined>();
+  const [slideDirection, setSlideDirection] = useState<"left" | "right" | null>(
+    null,
+  );
+  const [isAnimating, setIsAnimating] = useState(false);
+  const calendarRef = useRef<FullCalendar>(null);
+  const touchStartX = useRef<number>(0);
 
   const calendarEvents = data.map((item) => ({
     title: item.changed_work_type || item.work_type,
@@ -55,10 +61,42 @@ export default function Calendar({
     },
   }));
 
+  const navigateMonth = (direction: "left" | "right") => {
+    if (isAnimating) return;
+
+    const api = calendarRef.current?.getApi();
+    setSlideDirection(direction);
+    setIsAnimating(true);
+
+    setTimeout(() => {
+      if (direction === "left") api?.next();
+      else api?.prev();
+
+      setSlideDirection(null);
+      setIsAnimating(false);
+    }, 250); // 애니메이션 시간과 맞춰야 함
+  };
+
+  const handleTouchStart = (e: React.TouchEvent) => {
+    touchStartX.current = e.touches[0].clientX;
+  };
+
+  const handleTouchEnd = (e: React.TouchEvent) => {
+    const diff = touchStartX.current - e.changedTouches[0].clientX;
+    if (Math.abs(diff) < 50) return;
+    navigateMonth(diff > 0 ? "left" : "right");
+  };
   return (
     <>
       <CalendarStyles />
-      <div className="w-full h-full md:h-[480px] md:w-[800px] md:mx-auto flex flex-col relative">
+      <div
+        className={`w-full h-full md:h-[480px] md:w-[800px] md:mx-auto flex flex-col relative overflow-hidden
+                    ${slideDirection === "left" ? "fc-slide-left" : ""}
+                    ${slideDirection === "right" ? "fc-slide-right" : ""}
+                  `}
+        onTouchStart={handleTouchStart}
+        onTouchEnd={handleTouchEnd}
+      >
         {isLoading && (
           <div className="absolute inset-0 z-10 flex items-center justify-center bg-white/60 rounded-lg">
             <div className="w-8 h-8 border-4 border-gray-300 border-t-gray-600 rounded-full animate-spin" />
@@ -72,6 +110,7 @@ export default function Calendar({
           contentHeight="auto"
           locale={KoLocal}
           fixedWeekCount={false}
+          ref={calendarRef}
           datesSet={(info) => {
             const year = info.view.currentStart.getFullYear();
             const month = info.view.currentStart.getMonth();
