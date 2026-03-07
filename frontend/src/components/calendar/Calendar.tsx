@@ -81,7 +81,19 @@ export default function Calendar({
 
   const handleDatePickerSelect = (year: number, month: number) => {
     const api = calendarRef.current?.getApi();
-    api?.gotoDate(new Date(year, month - 1, 1));
+    if (!api) return;
+
+    const current = api.getDate();
+    const currentYear = current.getFullYear();
+    const currentMonth = current.getMonth() + 1;
+    const diff = (year - currentYear) * 12 + (month - currentMonth);
+
+    if (diff === 0) return;
+
+    for (let i = 0; i < Math.abs(diff); i++) {
+      if (diff > 0) api.next();
+      else api.prev();
+    }
   };
 
   const handleTouchStart = (e: React.TouchEvent) => {
@@ -98,7 +110,7 @@ export default function Calendar({
     <>
       <CalendarStyles />
       <div
-        className={`w-full h-full md:h-[480px] md:w-[800px] md:mx-auto flex flex-col relative overflow-hidden
+        className={`w-full h-full md:h-[480px] md:w-[800px] md:mx-auto flex flex-col relative 
           ${slideDirection === "left" ? "fc-slide-left" : ""}
           ${slideDirection === "right" ? "fc-slide-right" : ""}
         `}
@@ -169,11 +181,17 @@ export default function Calendar({
             });
           }}
           dayCellClassNames={(arg) => {
-            const year = arg.date.getFullYear();
-            const month = String(arg.date.getMonth() + 1).padStart(2, "0");
-            const day = String(arg.date.getDate()).padStart(2, "0");
-            const kstDate = new Date(`${year}-${month}-${day}T00:00:00+09:00`);
-            return isHoliday(kstDate) ? ["fc-day-holiday"] : [];
+            try {
+              const year = arg.date.getFullYear();
+              const month = String(arg.date.getMonth() + 1).padStart(2, "0");
+              const day = String(arg.date.getDate()).padStart(2, "0");
+              const kstDate = new Date(
+                `${year}-${month}-${day}T00:00:00+09:00`,
+              );
+              return isHoliday(kstDate) ? ["fc-day-holiday"] : [];
+            } catch {
+              return [];
+            }
           }}
           eventClick={(eventInfo) => {
             if (!isLoggedIn) {

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 interface Props {
   year: number;
@@ -24,6 +24,10 @@ const MONTHS = [
 export default function CalendarDatePicker({ year, month, onSelect }: Props) {
   const [open, setOpen] = useState(false);
   const [pickerYear, setPickerYear] = useState(year);
+
+  useEffect(() => {
+    setPickerYear(year);
+  }, [year]);
 
   return (
     <div className="relative flex items-center justify-center">
