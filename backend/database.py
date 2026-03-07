@@ -10,9 +10,9 @@ DATABASE_URL = os.getenv("DATABASE_URL")
 engine = create_engine(
     DATABASE_URL,
     echo=False,
-    poolclass=NullPool,        # Supabase Pooler(PgBouncer)가 풀링하므로 SQLAlchemy 풀링 비활성화
+    poolclass=NullPool,    
     connect_args={
-        "connect_timeout": 10,         # 연결 시도 10초 제한
+        "connect_timeout": 10,         
         "keepalives": 1,
         "keepalives_idle": 30,
         "keepalives_interval": 10,

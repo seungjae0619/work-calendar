@@ -49,12 +49,12 @@ class LoginRequest(BaseModel):
 class LoginResponse(BaseModel):
     message: str
 
-@app.on_event("startup")
-def on_startup():
-    try:
-        create_db_and_tables()
-    except Exception as e:
-        print(f"테이블 생성 실패 (무시함): {e}")
+# @app.on_event("startup")
+# def on_startup():
+#     try:
+#         create_db_and_tables()
+#     except Exception as e:
+#         print(f"테이블 생성 실패 (무시함): {e}")
 
 def verify_session(session_id: Annotated[str | None, Header()] = None):
     """세션 검증"""
