@@ -52,36 +52,46 @@ export default function Calendar({
   const [displayYear, setDisplayYear] = useState(new Date().getFullYear());
   const [displayMonth, setDisplayMonth] = useState(new Date().getMonth() + 1);
 
+  const [showEvents, setShowEvents] = useState(true);
+
   const calendarRef = useRef<FullCalendar>(null);
   const touchStartX = useRef<number>(0);
 
-  const calendarEvents = data
-    .filter((item) => {
-      const itemMonth = item.date.slice(0, 7);
-      const currentMonth = `${displayYear}-${String(displayMonth).padStart(2, "0")}`;
-      return itemMonth === currentMonth;
-    })
-    .map((item) => ({
-      title: item.changed_work_type || item.work_type,
-      start: item.date,
-      extendedProps: {
-        isChanged:
-          item.changed_work_type && item.changed_work_type !== item.work_type,
-        originalType: item.work_type,
-        changedType: item.changed_work_type,
-      },
-    }));
+  const calendarEvents = showEvents
+    ? data
+        .filter((item) => {
+          const itemMonth = item.date.slice(0, 7);
+          const currentMonth = `${displayYear}-${String(displayMonth).padStart(2, "0")}`;
+          return itemMonth === currentMonth;
+        })
+        .map((item) => ({
+          title: item.changed_work_type || item.work_type,
+          start: item.date,
+          extendedProps: {
+            isChanged:
+              item.changed_work_type &&
+              item.changed_work_type !== item.work_type,
+            originalType: item.work_type,
+            changedType: item.changed_work_type,
+          },
+        }))
+    : [];
 
   const navigateMonth = (direction: "left" | "right") => {
     if (isAnimating) return;
     const api = calendarRef.current?.getApi();
+
+    setShowEvents(false);
     setSlideDirection(direction);
     setIsAnimating(true);
+
     setTimeout(() => {
       if (direction === "left") api?.next();
       else api?.prev();
+
       setSlideDirection(null);
       setIsAnimating(false);
+      setShowEvents(true);
     }, 250);
   };
 
